@@ -3,7 +3,7 @@
 ## Description
 Quand is a simple calendar written in POSIX sh that take some inspiration from [when](http://www.lightandmatter.com/when/when.html), it's easily hackable and blazingly fast*! (*with small past/future)
 <br/>
-Quand default configuration uses environment variables (LANG, EDITOR and XDG_CONFIG_HOME), but it can be configured with a config file (in $XDG_CONFIG_HOME/quand/config otherwise it won't be detected, if you don't know what $XDG_CONFIG_HOME is have a look at the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). It is also possible and easy to directly modify 'quand' because the config is at the top of the file.
+Quand default configuration uses environment variables (LANG, EDITOR and XDG_CONFIG_HOME), but it can be configured with a config file (in $XDG_CONFIG_HOME/quand/config otherwise it won't be detected, if you don't know what $XDG_CONFIG_HOME is have a look at the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). It is also possible and easy to directly modify 'quand' because the config is at the top of the file, if you do that be sure to comment getsettings in main otherwise it will slow down Quand a little.
 
 ## Example of calendar file:
 Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
@@ -20,17 +20,17 @@ Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
 ## Exhaustive config file
 This is just an example, not the default config.
 <br/>
-The spaces between each '=' are important.
-<br/>
 There is no need to specify everthing.
+<br/>
+all spaces will be removed
 <br/>
 It is necessary to put absolute path of the calendar in the config file for it to work.
 ```
 language = fr_FR.UTF-8
-calendar = /home/foo/.config/quand/calendar
+calendar  =/home/foo/.config/quand/calendar
 editor = nvim
-header = 1
-past = 2
+header=1
+past =  2
 future = 5
 yesterday = hier
 today = auhourd'hui
