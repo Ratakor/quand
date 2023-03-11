@@ -1,9 +1,9 @@
 <h1 align="center">Quand</h1>
 
 ## Description
-Quand is a simple calendar written in POSIX sh that take some inspiration from [when](http://www.lightandmatter.com/when/when.html), it's easily hackable and blazingly fast*! (*with small past/future)
-<br/>
-Quand default configuration uses environment variables (LANG, EDITOR and XDG_CONFIG_HOME), but it can be configured with a config file (in $XDG_CONFIG_HOME/quand/config otherwise it won't be detected, if you don't know what $XDG_CONFIG_HOME is have a look at the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)). It is also possible and easy to directly modify 'quand' because the config is at the top of the file, if you do that be sure to comment getsettings in main otherwise it will slow down Quand a little.
+Quand is a simple calendar written in POSIX sh that take some inspiration from [when](http://www.lightandmatter.com/when/when.html), it's easily hackable and blazingly fast*!
+
+(*with small past/future)
 
 ## Installation
 ```
@@ -24,25 +24,23 @@ Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
 * 07 14, Bastille Day
 ```
 
-## Exhaustive config file
-This is just an example, not the default config.
-<br/>
-There is no need to specify everthing.
-<br/>
-All spaces will be removed.
-<br/>
-It is necessary to put absolute path of the calendar in the config file for it to work.
+## Configuration
+Quand can be configured with a config file (~/.config/quand/config) or by directly modifying the source code. If you do the latter, be sure to comment `getsettings` in main() as it will increase performance a little.
+
+Quand follow the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) and uses $EDITOR and $LANG to specify the default editor and language.
+
+Default configuration:
 ```
-language = fr_FR.UTF-8
-calendar  =/home/foo/.config/quand/calendar
-editor = nvim
-header=1
-past =  2
-future = 5
-yesterday = hier
-today = auhourd'hui
-tomorrow = demain
-mondayfirst = 1
+language = en_US.UTF-8
+calendar = /home/username/.config/quand/calendar
+editor = vi
+header = 0
+past = 0
+future = 1
+yesterday = yesterday
+today = today
+tomorrow = tomorrow
+mondayfirst = 0
 ```
 
 ## Options
