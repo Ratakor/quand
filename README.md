@@ -38,7 +38,8 @@ header = 0
 past = 0
 future = 1
 yesterday = yesterday
-today = today
+# \033[1m is for bold
+today = \033[1mtoday
 tomorrow = tomorrow
 mondayfirst = 0
 ```

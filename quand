@@ -10,7 +10,7 @@ header=0
 past=0
 future=1
 yesterday="yesterday"
-today="today"
+today="\033[1mtoday"
 tomorrow="tomorrow"
 mondayfirst=0
 
@@ -42,7 +42,7 @@ print() {
 	while IFS= read -r line || [ -n "$line" ]; do
 		case $line in
 		"$year $1"*|"* $1"*)
-			printf '%s    %s\n' "$2" "$line" ;;
+			printf "$2\033[m    %s\n"  "$line" ;;
 		esac
 	done < "$calendar"
 }
