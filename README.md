@@ -51,6 +51,7 @@ mondayfirst = 0
 - c : get calendar
 
 ## TODO
-- add an ICS parser or handle ICS files
+- add a ICS file converter or handle ICS files
 - add help command
 - add a man page
+- add PKGBUILD

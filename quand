@@ -105,14 +105,17 @@ main() {
 		return 0 ;;
 	'')
 		exec 2>/dev/null ;;
+	*)
+		printf 'Error: unknown option %s\n' "$*"
+		printhelp
+		return 1 ;;
 	esac
 
-	if [ ! -f "$calendar" ]; then
-		printf '%s is not a valid file\n' "$calendar"
+	[ ! -f "$calendar" ] &&
+		printf '%s is not a valid file\n' "$calendar" &&
 		return 1
-	fi
 
-	year="$(date "+%Y")"
+	year="$(date "+%Y")" # this is inaccurate
 
 	[ "$header" = 1 ] && printf '%s\n\n' "$(LC_ALL="$language" date)"
 

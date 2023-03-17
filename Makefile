@@ -1,4 +1,4 @@
-PREFIX = /usr/local
+PREFIX="${HOME}/.local"
 #MANDIR = ${PREFIX}/share/man
 
 all:
