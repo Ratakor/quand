@@ -1,8 +1,8 @@
 .POSIX:
 
-#VERSION = 1.0.2
+VERSION = 0.2
 PREFIX = /usr/local
-#MANPREFIX = ${PREFIX}/share/man
+MANPREFIX = ${PREFIX}/share/man
 
 all:
 	@printf "Run 'sudo make install' to install quand.\n"
