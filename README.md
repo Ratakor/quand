@@ -18,11 +18,14 @@ Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
 ```
 # Don't forget the 0 behind month or day
 2023 04 28, 07:30 -> 09:30 English
-2023 03 12, Dentist
+2023 03 12 Dentist
 
-# use a start for events that happen once a year
-* 08 10, Mum's anniversary
-* 07 14, Bastille Day
+# use a star for events that happen once a year
+* 08 10 Mum's anniversary
+* 07 14 Bastille Day
+
+# use 3 stars to always show an event
+* * * Good Morning :)
 ```
 
 ## Configuration
@@ -42,9 +45,12 @@ yesterday="yesterday  "
 # \033[1m is for bold, it's also possible to add color with for example \033[34m
 today="\033[1mtoday      "
 tomorrow="tomorrow   "
+special="special   "
+spaces="        " # to align name of months in case today... are too long
 mondayfirst=0
 ```
 
 ## TODO
 - add a ICS file converter or handle ICS files
 - add a man page
+- handle multiple arguments

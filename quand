@@ -12,6 +12,8 @@ future=14
 yesterday="yesterday  "
 today="\033[1mtoday      "
 tomorrow="tomorrow   "
+special="special   "
+spaces="        "
 mondayfirst=0
 
 getday() {
@@ -19,16 +21,25 @@ getday() {
 }
 
 getnameday() {
-	LC_ALL="$language" date --date="$1 day" "+%a        "
+	LC_ALL="$language" date --date="$1 day" "+%a$spaces"
+}
+
+printspecial() {
+	for line in $calendar; do
+		case $line in
+		"* * *"*)
+			printf "$special\033[m%s\n" "${line#"* * *"}" ;;
+		esac
+	done
 }
 
 print() {
-	while IFS= read -r line || [ -n "$line" ]; do
+	for line in $calendar; do
 		case $line in
 		"$year $1"*|"* $1"*)
-			printf "$2\033[m%s\n"  "$line" ;;
+			printf "$2\033[m%s\n" "$line" ;;
 		esac
-	done < "$calendar"
+	done
 }
 
 
@@ -37,12 +48,16 @@ usage() {
 
 Options:
 no option             | Default
+-h|--help             │ Print this help message and exit
+-v|--version          | Print the version
+-p|--past             | Temporarily change past
+-f|--future           | Temporarily change future
                       |
 e|edit                | Edit the calendar file
 c|cal [n]             | Print a calendar with 1 or n months
-                      │
--h|--help             │ Print this help message and exit
--v|--version          | Print the version\n' "${0##*/}" 1>&2
+
+Have a look at the README for more information about the configuration.\n' "${0##*/}" 1>&2
+
 }
 
 calendar() {
@@ -69,6 +84,12 @@ main() {
 	c|cal)
 		calendar "$2"
 		return ;;
+	-p|--past)
+		past="$2"
+		exec ;;
+	-f|--future)
+		future="$2"
+		exec ;;
 	'')
 		exec ;;
 	*)
@@ -80,6 +101,9 @@ main() {
 	[ ! -f "$calendar" ] &&
 		printf 'Error: %s is not a valid file\n' "$calendar" 1>&2 &&
 		return 1
+
+	calendar="$(sort "$calendar")"
+	IFS=$(printf '\n\b')
 
 	year="$(date "+%Y")" # this is inaccurate
 
@@ -102,6 +126,8 @@ main() {
 		future="$((future-1))"
 		cpt="$((cpt+1))"
 	done
+
+	printspecial
 
 	return 0
 }
