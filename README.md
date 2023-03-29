@@ -24,6 +24,9 @@ Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
 * 08 10 Mum's anniversary
 * 07 14 Bastille Day
 
+# use 2 stars for events that happen once a month
+* * 01 Happy New Month!
+
 # use 3 stars to always show an event
 * * * Good Morning :)
 ```

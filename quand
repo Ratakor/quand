@@ -1,9 +1,9 @@
 #!/bin/sh
 
-VERSION="0.2"
+VERSION="0.3"
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}/quand/config"
 
-language="${LANG:-en_US.utf-8}"
+language="${LANG:-en_US.UTF-8}"
 calendar="${XDG_DATA_HOME:-$HOME/.local/share}/quand/calendar"
 editor="${EDITOR:-vi}"
 header=1
@@ -16,12 +16,19 @@ special="special   "
 spaces="        "
 mondayfirst=0
 
-getday() {
-	date --date="$1 day" "+%m %d"
+getdate() {
+	LC_ALL="$language" date --date="$1 day" "+%Y@%m@%d@%a$spaces"
 }
 
-getnameday() {
-	LC_ALL="$language" date --date="$1 day" "+%a$spaces"
+split() {
+	set -f
+	old_ifs=$IFS
+	IFS=@
+	# shellcheck disable=SC2086
+	set -- $1
+	printf '%s\n' "$@"
+	IFS=$old_ifs
+	set +f
 }
 
 printspecial() {
@@ -36,12 +43,23 @@ printspecial() {
 print() {
 	for line in $calendar; do
 		case $line in
-		"$year $1"*|"* $1"*)
-			printf "$2\033[m%s\n" "$line" ;;
+		"$1 $2 $3"*)
+			printf "${5:-$4}\033[m%s\n" "$line" ;;
+		"* $2 $3"*)
+			printf "${5:-$4}\033[m%s\n" "$1 ${line#"* "}" ;;
+		"* * $3"*)
+			printf "${5:-$4}\033[m%s\n" "$1 $2 ${line#"* * "}" ;;
 		esac
 	done
 }
 
+calendar() {
+	if [ "$mondayfirst" -eq 1 ]; then
+		LC_ALL="$language" cal -m -n "${1:-1}"
+	else
+		LC_ALL="$language" cal -s -n "${1:-1}"
+	fi
+}
 
 usage() {
 	printf 'Usage: %s [options]
@@ -57,15 +75,6 @@ e|edit                | Edit the calendar file
 c|cal [n]             | Print a calendar with 1 or n months
 
 Have a look at the README for more information about the configuration.\n' "${0##*/}" 1>&2
-
-}
-
-calendar() {
-	if [ "$mondayfirst" -eq 1 ]; then
-		LC_ALL="$language" cal -m -n "${1:-1}"
-	else
-		LC_ALL="$language" cal -s -n "${1:-1}"
-	fi
 }
 
 main() {
@@ -105,32 +114,32 @@ main() {
 	calendar="$(sort "$calendar")"
 	IFS=$(printf '\n\b')
 
-	year="$(date "+%Y")" # this is inaccurate
-
 	[ "$header" = 1 ] && printf '%s\n\n' "$(LC_ALL="$language" date)"
 
 	while [ "$past" -lt -1 ]; do
-		print "$(getday "$past")" "$(getnameday "$past")"
+		# shellcheck disable=SC2046
+		print $(split "$(getdate "$past")")
 		past=$((past+1))
 	done
 
-	[ "$past" -eq -1 ] && print "$(getday "-1")" "$yesterday"
+	# shellcheck disable=SC2046
+	[ "$past" -eq -1 ] && print $(split "$(getdate "-1")") "$yesterday"
 
-	print "$(getday 0)" "$today"
+	# shellcheck disable=SC2046
+	print $(split "$(getdate 0)") "$today"
 
-	[ "$future" -ge 1 ] && print "$(getday "+1")" "$tomorrow"
+	# shellcheck disable=SC2046
+	[ "$future" -ge 1 ] && print $(split "$(getdate "+1")") "$tomorrow"
 
 	cpt=2
 	while [ "$future" -gt 1 ]; do
-		print "$(getday "+$cpt")" "$(getnameday "+$cpt")"
+		# shellcheck disable=SC2046
+		print $(split "$(getdate "+$cpt")")
 		future="$((future-1))"
 		cpt="$((cpt+1))"
 	done
 
 	printspecial
-
-	return 0
 }
 
 main "$@"
-
