@@ -68,8 +68,8 @@ Options:
 no option             | Default
 -h|--help             │ Print this help message and exit
 -v|--version          | Print the version
--p|--past             | Temporarily change past
--f|--future           | Temporarily change future
+-p|--past [n]         | Temporarily change past (n is negative)
+-f|--future [n]       | Temporarily change future (n is positive)
                       |
 e|edit                | Edit the calendar file
 c|cal [n]             | Print a calendar with 1 or n months
@@ -94,9 +94,15 @@ main() {
 		calendar "$2"
 		return ;;
 	-p|--past)
+		[ -z "$2" ] &&
+			printf 'Error: no argument given\n' 1>&2 &&
+			return 1
 		past="$2"
 		exec ;;
 	-f|--future)
+		[ -z "$2" ] &&
+			printf 'Error: no argument given\n' 1>&2 &&
+			return 1
 		future="$2"
 		exec ;;
 	'')
