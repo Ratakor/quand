@@ -15,20 +15,27 @@ $ cd quand
 
 ## Example of calendar file:
 Any line that does not respect the 'yyyy mm dd' format will simply be ignored.
+The comma is not necessary, I just like it.
 ```
 # Don't forget the 0 behind month or day
 2023 04 28, 07:30 -> 09:30 English
-2023 03 12 Dentist
+2023 03 12, Dentist
 
-# use a star for events that happen once a year
-* 08 10 Mum's anniversary
-* 07 14 Bastille Day
+# For events that happen once a week:
+# The name of each day depends on your locale
+Mon, don't forget to update with pacman -Syyu
+Fri, it's friday!
 
-# use 2 stars for events that happen once a month
-* * 01 Happy New Month!
+# Use a star for events that happen once a year:
+* 08 10, Mum's anniversary
+* 07 14, Bastille Day
 
-# use 3 stars to always show an event
+# Use 2 stars for events that happen once a month:
+* * 01, Happy New Month!
+
+# Use 3 stars to always show an event:
 * * * Good Morning :)
+* * * 2023 03 31, URGENT don't forget your meeting
 ```
 
 ## Configuration

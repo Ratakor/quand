@@ -46,9 +46,12 @@ print() {
 		"$1 $2 $3"*)
 			printf "${5:-$4}\033[m%s\n" "$line" ;;
 		"* $2 $3"*)
-			printf "${5:-$4}\033[m%s\n" "$1 ${line#"* "}" ;;
+			printf "${5:-$4}\033[m%s\n" "$1${line#"*"}" ;;
 		"* * $3"*)
-			printf "${5:-$4}\033[m%s\n" "$1 $2 ${line#"* * "}" ;;
+			printf "${5:-$4}\033[m%s\n" "$1 $2${line#"* *"}" ;;
+		"${4%"$spaces"}"*)
+			printf "${5:-$4}\033[m%s\n"\
+				"$1 $2 $3${line#"${4%"$spaces"}"}" ;;
 		esac
 	done
 }
@@ -74,7 +77,8 @@ no option             | Default
 e|edit                | Edit the calendar file
 c|cal [n]             | Print a calendar with 1 or n months
 
-Have a look at the README for more information about the configuration.\n' "${0##*/}" 1>&2
+Have a look at the README for more information about the configuration.\n'\
+	"${0##*/}" 1>&2
 }
 
 main() {
