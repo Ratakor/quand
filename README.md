@@ -23,7 +23,7 @@ The comma is not necessary, I just like it.
 
 # For events that happen once a week:
 # The name of each day depends on your locale
-Mon, don't forget to update with pacman -Syyu
+Mon, don't forget to update with emerge -uDN @world
 Fri, it's friday!
 
 # Use a star for events that happen once a year:
@@ -63,4 +63,3 @@ mondayfirst=0
 ## TODO
 - add a ICS file converter or handle ICS files
 - add a man page
-- handle multiple arguments
