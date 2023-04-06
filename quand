@@ -67,26 +67,21 @@ calendar() {
 
 args() {
 	while [ -n "$*" ]; do
+		[ -z "$2" ] &&
+			printf '\033[31mError:\033[m no argument given\n' 1>&2 &&
+			usage &&
+			exit 1
 		case $1 in
 		-c|--calendar)
-			[ -z "$2" ] &&
-				printf 'Error: no argument given\n' 1>&2 &&
-				exit 1
 			calendar="$2" ;;
 		-p|--past)
-			[ -z "$2" ] &&
-				printf 'Error: no argument given\n' 1>&2 &&
-				exit 1
 			[ "$2" -gt 0 ] &&
 				printf "\033[33mHint:\033[m 'past' is negative.\n\n"
 			past="$2" ;;
 		-f|--future)
-			[ -z "$2" ] &&
-				printf 'Error: no argument given\n' 1>&2 &&
-				exit 1
 			future="$2" ;;
 		*)
-			printf 'Error: unknown option %s\n' "$*" 1>&2
+			printf '\033[31mError:\033[m unknown option %s\n' "$*" 1>&2
 			usage
 			exit 1 ;;
 		esac
@@ -134,13 +129,13 @@ main() {
 	'')
 		exec ;;
 	*)
-		printf 'Error: unknown option %s\n' "$*" 1>&2
+		printf '\033[31mError:\033[m unknown option %s\n' "$*" 1>&2
 		usage
 		return 1 ;;
 	esac
 
 	[ ! -f "$calendar" ] &&
-		printf 'Error: %s is not a valid file\n' "$calendar" 1>&2 &&
+		printf '\033[31mError:\033[m %s is not a valid file\n' "$calendar" 1>&2 &&
 		return 1
 
 	calendar="$(sort "$calendar")"
