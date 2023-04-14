@@ -67,10 +67,11 @@ calendar() {
 
 args() {
 	while [ -n "$*" ]; do
-		[ -z "$2" ] &&
-			printf '\033[31mError:\033[m no argument given\n' 1>&2 &&
-			usage &&
+		if [ -z "$2" ]; then
+			printf '\033[31mError:\033[m no argument given\n' 1>&2
+			usage
 			exit 1
+		fi
 		case $1 in
 		-c|--calendar)
 			calendar="$2" ;;
@@ -90,21 +91,22 @@ args() {
 }
 
 usage() {
-	printf 'Usage: %s [options]
+	cat << EOF 1>&2
+Usage: ${0##*/} [options]
 
 Options:
 no option             | Default
--h|--help             │ Print this help message and exit
--v|--version          | Print the version
+e|edit                | Edit the calendar file
+c|cal [n]             | Print a calendar with 1 or n months
+                      |
 -c|--calendar [path]  | Temporarily change the calendar file used
 -p|--past [n]         | Temporarily change past (n is negative)
 -f|--future [n]       | Temporarily change future (n is positive)
-                      |
-e|edit                | Edit the calendar file
-c|cal [n]             | Print a calendar with 1 or n months
+-h|--help             │ Print this help message
+-v|--version          | Print version information
 
-Have a look at the README for more information about the configuration.\n'\
-	"${0##*/}" 1>&2
+Have a look at the man page for more information about the configuration.
+EOF
 }
 
 main() {

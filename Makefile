@@ -1,22 +1,24 @@
 .POSIX:
 
+NAME = quand
 VERSION = 0.4
+
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
 
 all:
-	@printf "Run 'sudo make install' to install quand.\n"
+	@printf "Run 'sudo make install' to install ${NAME}.\n"
 
 install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
-	cp -f quand ${DESTDIR}${PREFIX}/bin
-	chmod 755 ${DESTDIR}${PREFIX}/bin/quand
-	@#mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	@#sed "s/VERSION/${VERSION}/g" < quand.1 > ${DESTDIR}${MANPREFIX}/man1/quand.1
-	@#chmod 644 ${DESTDIR}${MANPREFIX}/man1/quand.1
+	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
+	chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
+	mkdir -p ${DESTDIR}${MANPREFIX}/man1
+	cp -f ${NAME}.1 ${DESTDIR}${MANPREFIX}/man1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/quand
-		@#${DESTDIR}${MANPREFIX}/man1/quand.1
+	rm -f ${DESTDIR}${PREFIX}/bin/${NAME}\
+		${DESTDIR}${MANPREFIX}/man1/${NAME}.1
 
 .PHONY: all install uninstall

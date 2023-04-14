@@ -62,4 +62,3 @@ mondayfirst=0
 
 ## TODO
 - add a ICS file converter or handle ICS files
-- add a man page
