@@ -18,13 +18,13 @@ spaces="        "
 mondayfirst=0
 
 getdate() {
-	LC_ALL="$language" date --date="$1 day" "+%Y@%m@%d@%a$spaces"
+	LC_ALL="$language" date --date="$1 day" "+%Y/%m/%d/%a$spaces"
 }
 
 split() {
 	set -f
 	old_ifs=$IFS
-	IFS=@
+	IFS=/
 	# shellcheck disable=SC2086
 	set -- $1
 	printf '%s\n' "$@"
@@ -81,6 +81,8 @@ args() {
 			past="$2" ;;
 		-f|--future)
 			future="$2" ;;
+		-d|--date)
+			date="$2" ;;
 		*)
 			printf '\033[31mError:\033[m unknown option %s\n' "$*" 1>&2
 			usage
@@ -88,6 +90,10 @@ args() {
 		esac
 		shift 2
 	done
+	if [ -n "$date" ]; then
+		future=0
+		past=0
+	fi
 }
 
 usage() {
@@ -100,6 +106,7 @@ e|edit                | Edit the calendar file
 c|cal [n]             | Print a calendar with 1 or n months
                       |
 -c|--calendar [path]  | Temporarily change the calendar file used
+-d|--date [date]      | Print events for a specific date, format: YYYY/MM/DD
 -p|--past [n]         | Temporarily change past (n is negative)
 -f|--future [n]       | Temporarily change future (n is positive)
 -h|--help             │ Print this help message
@@ -152,7 +159,7 @@ main() {
 
 	[ "$past" -eq -1 ] && print $(split "$(getdate "-1")") "$yesterday"
 
-	print $(split "$(getdate 0)") "$today"
+	print $(split "${date:-$(getdate 0)}") "$today"
 
 	[ "$future" -ge 1 ] && print $(split "$(getdate "+1")") "$tomorrow"
 
