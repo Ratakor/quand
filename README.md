@@ -3,6 +3,8 @@
 ## Description
 Quand is a simple calendar written in POSIX sh that take some inspiration from [when](http://www.lightandmatter.com/when/when.html), it's easily hackable and blazingly fast!
 
+![example](/quand.gif)
+
 ## Installation
 AUR: [quand-git](https://aur.archlinux.org/packages/quand-git)
 
@@ -62,3 +64,4 @@ mondayfirst=0
 
 ## TODO
 - add a ICS file converter or handle ICS files
+- refactor args parsing
