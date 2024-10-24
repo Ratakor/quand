@@ -1,0 +1,31 @@
+.{
+    .name = "quand",
+    .version = "0.5.0",
+    .minimum_zig_version = "0.13.0",
+    .dependencies = .{
+        .zzdoc = .{
+            .url = "git+https://github.com/rockorager/zzdoc#c36a0e7557197e97d16bb2d52a4ea132c830add6",
+            .hash = "1220b7f4bf11d7cbf1077a84fbb1a2d342c63769590898f1ae17a4305f24a1246f63",
+        },
+        .zdt = .{
+            .url = "git+https://github.com/FObersteiner/zdt#97b755474de92204230e3c4e2fe663035a465e50",
+            .hash = "1220a6c5b44aa71bf15796b623a0ad14eb97ee859d00642725b0ec9a186761bdc130",
+        },
+        .ziggy = .{
+            .url = "git+https://github.com/kristoff-it/ziggy#42b6f5d7320340bc5903c4c29d34065e8517a549",
+            .hash = "12200b69baf035d0474e04b131862d36b2657fbce88a5c9dc657af861430e5fc7e3d",
+        },
+        .@"known-folders" = .{
+            .url = "git+https://github.com/ziglibs/known-folders#1cceeb70e77dec941a4178160ff6c8d05a74de6f",
+            .hash = "12205f5e7505c96573f6fc5144592ec38942fb0a326d692f9cddc0c7dd38f9028f29",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "docs",
+        "LICENSE",
+        "README.md",
+    },
+}
