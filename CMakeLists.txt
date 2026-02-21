@@ -1,0 +1,15 @@
+# cmake -B build && cmake --build build
+cmake_minimum_required(VERSION 4.2)
+project(quand)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS Off)
+
+set(PROJECT_VERSION_MAJOR 0)
+set(PROJECT_VERSION_MINOR 4)
+SET(PROJECT_VERSION_PATCH 1)
+string(JOIN "." PROJECT_VERSION ${PROJECT_VERSION_MAJOR} ${PROJECT_VERSION_MINOR} ${PROJECT_VERSION_PATCH})
+
+add_executable(${PROJECT_NAME} src/main.cpp)
+target_compile_definitions(${PROJECT_NAME} PUBLIC VERSION="${PROJECT_VERSION}")
