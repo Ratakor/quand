@@ -32,65 +32,13 @@ constexpr static const struct option long_options[] = {
     {0, 0, 0, 0},
 };
 
-class Config {
-public:
-  // TODO: lang
-  std::string config_path;
-  std::string calendar_path;
-  std::string editor;
-  bool header; // TODO: rename print_header
-  bool mondayfirst;
-  int past;
-  int future;
-  std::string yesterday;
-  std::string today;
-  std::string tomorrow;
-  std::string special;
-
-  Config() {
-    config_path =
-        getenv_or("XDG_CONFIG_HOME", std::string(getenv("HOME")) + "/.config") +
-        "/quand/calendar";
-    calendar_path = getenv_or("XDG_DATA_HOME",
-                              std::string(getenv("HOME")) + "/.local/share") +
-                    "/quand/calendar";
-    editor = getenv_or("EDITOR", "vi");
-    header = true;
-    mondayfirst = false;
-    past = -1;
-    future = 14;
-    yesterday = "yesterday";
-    today = "today";
-    tomorrow = "tomorrow";
-    special = "special";
-  }
-
-  std::string toString() const {
-    std::stringstream ss;
-    ss << "Config {\n";
-    ss << "  config_path: \"" << config_path << "\",\n";
-    ss << "  calendar_path: \"" << calendar_path << "\",\n";
-    ss << "  editor: \"" << editor << "\",\n";
-    ss << "  header: " << (header ? "true" : "false") << ",\n";
-    ss << "  mondayfirst: " << (mondayfirst ? "true" : "false") << ",\n";
-    ss << "  past: " << past << ",\n";
-    ss << "  future: " << future << ",\n";
-    ss << "  yesterday: \"" << yesterday << "\",\n";
-    ss << "  today: \"" << today << "\",\n";
-    ss << "  tomorrow: \"" << tomorrow << "\",\n";
-    ss << "  special: \"" << special << "\"\n";
-    ss << "}";
-    return ss.str();
-  }
-};
-
 class DateValue {
 public:
   int value;
   bool repeat;
 
-  DateValue() {}
-  DateValue(int value) : value(value) { repeat = false; }
+  DateValue() = default;
+  DateValue(int value, bool repeat = false) : value(value), repeat(repeat) {}
 
   std::string toString(int width = 2) const {
     if (value < 0) {
@@ -102,15 +50,15 @@ public:
     }
   }
 
-  bool operator==(const DateValue &other) const {
+  bool operator==(const DateValue other) const {
     return value == other.value || repeat || other.repeat;
   }
 };
 
 class Year : public DateValue {
 public:
-  Year() {}
-  Year(int value) : DateValue(value) {}
+  using DateValue::DateValue;
+
   Year(std::string s) {
     if (s.back() == '*') {
       s.pop_back();
@@ -131,14 +79,14 @@ public:
 
 class Month : public DateValue {
 private:
-  constexpr static const std::string_view long_names[] = {
+  constexpr static std::string_view long_names[] = {
       "January", "February", "March",     "April",   "May",      "June",
       "July",    "August",   "September", "October", "November", "December",
   };
 
 public:
-  Month() {}
-  Month(int value) : DateValue(value) {}
+  using DateValue::DateValue;
+
   Month(std::string s) {
     if (s.back() == '*') {
       s.pop_back();
@@ -169,26 +117,26 @@ public:
 
     value = std::stoi(s);
     if (value < 1 || value > 12) {
-      throw new std::exception; // TODO
+      throw std::exception{}; // TODO
     }
   }
 
   // hopefully value is positive
-  std::string long_name() const { return std::string(long_names[value - 1]); }
+  std::string long_name() const { return std::string{long_names[value - 1]}; }
   std::string short_name() const { return long_name().substr(0, 3); }
 };
 
 class Day : public DateValue {
 private:
   // start with sunday?
-  constexpr static const std::string_view long_names[] = {
+  constexpr static std::string_view long_names[] = {
       "Monday", "Tuesday",  "Wednesday", "Thursday",
       "Friday", "Saturday", "Sunday",
   };
 
 public:
-  Day() {}
-  Day(int value) : DateValue(value) {}
+  using DateValue::DateValue;
+
   Day(std::string s) {
     if (s.back() == '*') {
       s.pop_back();
@@ -219,9 +167,13 @@ public:
     value = std::stoi(s);
     // TODO: better check based on month?
     if (value < 1 || value > 31) {
-      throw new std::exception; // TODO
+      throw std::exception{}; // TODO
     }
   }
+
+  // hopefully value is positive
+  std::string long_name() const { return std::string{long_names[value - 1]}; }
+  std::string short_name() const { return long_name().substr(0, 3); }
 };
 
 class Date {
@@ -230,13 +182,40 @@ public:
   Month month;
   Day day;
 
-  Date() {}
+  Date() = default;
   Date(Year year, Month month, Day day) : year(year), month(month), day(day) {}
   Date(time_t t) {
     auto tm = *localtime(&t);
-    year = Year(tm.tm_year + 1900);
-    month = Month(tm.tm_mon + 1);
-    day = Day(tm.tm_mday);
+    year = {tm.tm_year + 1900};
+    month = {tm.tm_mon + 1};
+    day = {tm.tm_mday};
+  }
+  Date(std::string s) {
+    auto pos = s.find_first_not_of("0123456789*");
+    if (pos == std::string::npos) {
+      throw std::exception{}; // idk
+    }
+    year = {s.substr(0, pos)};
+    s.erase(0, pos);
+    ltrim(s);
+
+    pos = s.find_first_not_of(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
+    if (pos == std::string::npos) {
+      throw std::exception{}; // idk
+    }
+    month = {s.substr(0, pos)};
+    s.erase(0, pos);
+    ltrim(s);
+
+    day = {s};
+    // pos = s.find_first_not_of(
+    //     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
+    // if (pos == std::string::npos) {
+    //   throw std::exception{}; // idk
+    // }
+    // day = Day{s.substr(0, pos)};
+    // s.erase(0, pos);
   }
 
   std::string toString() const {
@@ -254,33 +233,29 @@ public:
   std::string text;
 
   Line(std::string s) {
-    std::cout << s << std::endl;
     size_t pos = s.find_first_not_of("0123456789*");
     if (pos == std::string::npos) {
-      throw new std::exception; // idk
+      throw std::exception{}; // idk
     }
-    std::cout << s.substr(0, pos) << std::endl;
-    date.year = Year(s.substr(0, pos));
+    date.year = {s.substr(0, pos)};
     s.erase(0, pos);
     ltrim(s);
 
     pos = s.find_first_not_of(
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
     if (pos == std::string::npos) {
-      throw new std::exception; // idk
+      throw std::exception{}; // idk
     }
-    std::cout << s.substr(0, pos) << std::endl;
-    date.month = Month(s.substr(0, pos));
+    date.month = {s.substr(0, pos)};
     s.erase(0, pos);
     ltrim(s);
 
     pos = s.find_first_not_of(
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
     if (pos == std::string::npos) {
-      throw new std::exception; // idk
+      throw std::exception{}; // idk
     }
-    std::cout << s.substr(0, pos) << std::endl;
-    date.day = Day(s.substr(0, pos));
+    date.day = {s.substr(0, pos)};
     s.erase(0, pos);
 
     text = trim(s); // rtrim should already be done but you never know
@@ -289,33 +264,62 @@ public:
   std::string toString() const { return date.toString() + text; }
 };
 
+class Config {
+public:
+  // TODO: lang
+  std::string config_path;
+  std::string calendar_path;
+  std::string editor;
+  bool header; // TODO: rename print_header
+  bool mondayfirst;
+  int past;
+  int future;
+  std::optional<Date> date; // not in config file
+  std::string yesterday;
+  std::string today;
+  std::string tomorrow;
+  std::string special;
+
+  Config() {
+    config_path =
+        getenv_or("XDG_CONFIG_HOME", std::string{getenv("HOME")} + "/.config") +
+        "/quand/calendar";
+    calendar_path = getenv_or("XDG_DATA_HOME",
+                              std::string{getenv("HOME")} + "/.local/share") +
+                    "/quand/calendar";
+    editor = getenv_or("EDITOR", "vi");
+    header = true;
+    mondayfirst = false;
+    past = -1;
+    future = 14;
+    date = {};
+    yesterday = "yesterday";
+    today = "today";
+    tomorrow = "tomorrow";
+    special = "special";
+  }
+};
+
 static void usage(std::ostream &stream) {
-  stream << "Usage: quand [command] [options]" << std::endl;
-  stream << std::endl;
-  stream << "Command:" << std::endl;
-  stream << "no command            | Default behavior" << std::endl;
-  stream << "e|edit                | Edit the calendar file" << std::endl;
-  stream << "c|cal [n]             | Print a calendar with 1 or n months"
-         << std::endl;
-  stream << "                      |" << std::endl;
-  stream << "Flags:                |" << std::endl;
-  stream << "-c|--calendar [path]  | Temporarily change the calendar file used"
-         << std::endl;
-  stream << "-C|--config [path]    | Temporarily change the config file used"
-         << std::endl;
-  stream << "-d|--date [date]      | Print events for a specific date, format: "
-            "YYYY/MM/DD"
-         << std::endl;
-  stream << "-p|--past [n]         | Temporarily change past (n is negative)"
-         << std::endl;
-  stream << "-f|--future [n]       | Temporarily change future (n is positive)"
-         << std::endl;
-  stream << "-h|--help             │ Print this help message" << std::endl;
-  stream << "-v|--version          | Print version information" << std::endl;
-  stream << std::endl;
-  stream << "Have a look at the man page for more information about the "
-            "configuration."
-         << std::endl;
+  stream
+      << "Usage: quand [command] [options]\n\n"
+      << "Command:\n"
+      << "no command            | Default behavior\n"
+      << "e|edit                | Edit the calendar file\n"
+      << "c|cal [n]             | Print a calendar with 1 or n months\n"
+      << "                      |\n"
+      << "Flags:                |\n"
+      << "-c|--calendar [path]  | Temporarily change the calendar file used\n"
+      << "-C|--config [path]    | Temporarily change the config file used\n"
+      << "-d|--date [date]      | Print events for a specific date, format: "
+         "YYYY/MM/DD\n"
+      << "-p|--past [n]         | Temporarily change past (n is negative)\n"
+      << "-f|--future [n]       | Temporarily change future (n is positive)\n"
+      << "-h|--help             │ Print this help message\n"
+      << "-v|--version          | Print version information\n\n"
+      << "Have a look at the man page for more information about the "
+         "configuration."
+      << std::endl;
 }
 
 static void edit(const Config &config) {
@@ -326,7 +330,7 @@ static void edit(const Config &config) {
   exit(1);
 }
 
-static void cal(const Config &config, const std::optional<std::string> &arg) {
+static void cal(const Config &config, std::optional<std::string> arg) {
   if (config.mondayfirst) {
     execlp("cal", "cal", "-m", "-n", arg.value_or("1").c_str());
   } else {
@@ -336,16 +340,16 @@ static void cal(const Config &config, const std::optional<std::string> &arg) {
 }
 
 static std::vector<std::string> readlines(const std::string &filename) {
-  std::ifstream file(filename);
-  std::vector<std::string> lines;
-  for (std::string line; std::getline(file, line);) {
+  auto file = std::ifstream{filename};
+  auto lines = std::vector<std::string>{};
+  for (auto line = std::string{}; std::getline(file, line);) {
     lines.push_back(line);
   }
   return lines;
 }
 
 void print(const std::vector<Line> &lines, const Date &date,
-           const std::optional<std::string> &prefix) {
+           std::optional<std::string> prefix) {
   // std::cout << prefix.value_or("") << date.toString() << std::endl;
   for (auto l : lines) {
     if (l.date == date) {
@@ -365,7 +369,7 @@ void print(const std::vector<Line> &lines, const Date &date,
 }
 
 int main(int argc, char **argv) {
-  auto config = Config();
+  auto config = Config{};
 
   int opt;
   while ((opt = getopt_long(argc, argv, "c:C:d:p:f:hv", long_options,
@@ -399,14 +403,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (optind + 1 < argc) {
-    std::cerr << "Error: multiple commands provided\n";
-    usage(std::cerr);
-    return 1;
-  }
-
   // TODO: handle config_path & config overall
-  // std::cout << config.toString() << std::endl;
 
   if (optind == argc) {
     // TODO: handle default command
@@ -443,21 +440,35 @@ int main(int argc, char **argv) {
       print(lines_, Date(now + i * SEC_PER_DAY), std::nullopt);
     }
 
-    // TODO: print special (deprecate this shit imo)
-
-  } else if (std::string_view{argv[optind]} == "edit" ||
-             std::string_view{argv[optind]} == "e") {
-    edit(config);
-  } else if (std::string_view{argv[optind]} == "cal" ||
-             std::string_view{argv[optind]} == "c") {
-    std::cout << "got " << argv[optind] << std::endl;
-    // TODO: handle cal arg
-    cal(config, std::nullopt);
-  } else {
-    std::cerr << "Error: invalid command -- '" << argv[optind] << "'\n";
-    usage(std::cerr);
-    return 1;
+    return 0;
   }
 
-  return 0;
+  auto cmd = std::string_view{argv[optind++]};
+
+  if (cmd == "e" || cmd == "edit") {
+    if (optind != argc) {
+      std::cerr << "Error: too many arguments\n";
+      usage(std::cerr);
+      return 1;
+    }
+    edit(config);
+    return 0;
+  }
+
+  if (cmd == "c" || cmd == "cal") {
+    auto arg = (optind == argc)
+                   ? std::nullopt
+                   : std::make_optional<std::string>(argv[optind++]);
+    if (optind != argc) {
+      std::cerr << "Error: too many arguments\n";
+      usage(std::cerr);
+      return 1;
+    }
+    cal(config, arg);
+    return 0;
+  }
+
+  std::cerr << "Error: invalid command -- '" << cmd << "'\n";
+  usage(std::cerr);
+  return 1;
 }
