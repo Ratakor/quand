@@ -260,8 +260,6 @@ public:
 
     text = trim(s); // rtrim should already be done but you never know
   }
-
-  std::string toString() const { return date.toString() + text; }
 };
 
 class Config {
@@ -353,6 +351,7 @@ void print(const std::vector<Line> &lines, const Date &date,
   // std::cout << prefix.value_or("") << date.toString() << std::endl;
   for (auto l : lines) {
     if (l.date == date) {
+      // print day short name?
       std::cout << prefix.value_or(date.toString()) << ": ";
 
       auto age_re = std::regex{"([^\\\\]|^)\\\\age"};
@@ -406,17 +405,12 @@ int main(int argc, char **argv) {
   // TODO: handle config_path & config overall
 
   if (optind == argc) {
-    // TODO: handle default command
-    auto raw_lines = readlines(config.calendar_path);
-    std::for_each(raw_lines.begin(), raw_lines.end(), trim);
-    std::vector<std::string> lines;
-    std::copy_if(raw_lines.begin(), raw_lines.end(), std::back_inserter(lines),
-                 [](auto s) { return !s.empty() && s[0] != '#'; });
-    std::sort(lines.begin(), lines.end());
-
-    std::vector<Line> lines_;
-    std::transform(lines.begin(), lines.end(), std::back_inserter(lines_),
-                   [](auto s) { return Line(s); });
+    auto lines = readlines(config.calendar_path)
+      | std::views::transform(trim)
+      | std::views::filter([](const auto& s) { return !s.empty() && s[0] != '#'; })
+      // sort :)
+      | std::views::transform([](const auto& s) { return Line{s}; })
+      | std::ranges::to<std::vector>();
 
     auto now = system_clock::to_time_t(system_clock::now());
 
@@ -425,19 +419,19 @@ int main(int argc, char **argv) {
     }
 
     for (; config.past < -1; config.past++) {
-      print(lines_, Date(now + config.past * SEC_PER_DAY), std::nullopt);
+      print(lines, {now + config.past * SEC_PER_DAY}, std::nullopt);
     }
     if (config.past == -1) {
-      print(lines_, Date(now - SEC_PER_DAY), config.yesterday);
+      print(lines, {now - SEC_PER_DAY}, config.yesterday);
     }
     {
-      print(lines_, Date(now), config.today);
+      print(lines, {now}, config.today);
     }
     if (config.future >= 1) {
-      print(lines_, Date(now + SEC_PER_DAY), config.tomorrow);
+      print(lines, {now + SEC_PER_DAY}, config.tomorrow);
     }
     for (int i = 2; config.future > 1; config.future--, i++) {
-      print(lines_, Date(now + i * SEC_PER_DAY), std::nullopt);
+      print(lines, {now + i * SEC_PER_DAY}, std::nullopt);
     }
 
     return 0;
