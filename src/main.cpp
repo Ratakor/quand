@@ -405,12 +405,14 @@ int main(int argc, char **argv) {
   // TODO: handle config_path & config overall
 
   if (optind == argc) {
+    // clang-format off
     auto lines = readlines(config.calendar_path)
       | std::views::transform(trim)
       | std::views::filter([](const auto& s) { return !s.empty() && s[0] != '#'; })
       // sort :)
       | std::views::transform([](const auto& s) { return Line{s}; })
       | std::ranges::to<std::vector>();
+    // clang-format on
 
     auto now = system_clock::to_time_t(system_clock::now());
 
