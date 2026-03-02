@@ -6,5 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 # set(CMAKE_CXX_EXTENSIONS Off)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME}
+               src/main.cpp
+               src/utils.cpp
+              )
 target_compile_definitions(${PROJECT_NAME} PUBLIC VERSION="${CMAKE_PROJECT_VERSION}")
