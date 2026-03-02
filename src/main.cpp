@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -293,7 +294,8 @@ public:
     s.erase(0, pos);
     ltrim(s);
 
-    pos = s.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
+    pos = s.find_first_not_of(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
     if (pos == std::string::npos) {
       throw new std::exception; // idk
     }
@@ -302,7 +304,8 @@ public:
     s.erase(0, pos);
     ltrim(s);
 
-    pos = s.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
+    pos = s.find_first_not_of(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
     if (pos == std::string::npos) {
       throw new std::exception; // idk
     }
@@ -376,8 +379,17 @@ void print(const std::vector<Line> &lines, const Date &date,
   // std::cout << prefix.value_or("") << date.toString() << std::endl;
   for (auto l : lines) {
     if (l.date == date) {
-      std::cout << prefix.value_or(date.toString()) + ": " + l.text
-                << std::endl;
+      std::cout << prefix.value_or(date.toString()) << ": ";
+
+      auto age_re = std::regex{"([^\\\\]|^)\\\\age"};
+      auto age = "\\1" + std::to_string(date.year.value - l.date.year.value);
+      std::regex_replace(std::ostreambuf_iterator<char>(std::cout),
+                         l.text.begin(), l.text.end(), age_re, age,
+                         std::regex_constants::format_sed);
+      // std::regex_replace(l.text, age_re, age,
+      // std::regex_constants::format_sed);
+
+      std::cout << '\n';
     }
   }
 }
@@ -463,9 +475,11 @@ int main(int argc, char **argv) {
 
     // TODO: print special (deprecate this shit imo)
 
-  } else if (std::string_view(argv[optind]) == "edit") {
+  } else if (std::string_view{argv[optind]} == "edit" ||
+             std::string_view{argv[optind]} == "e") {
     edit(config);
-  } else if (std::string_view(argv[optind]) == "cal") {
+  } else if (std::string_view{argv[optind]} == "cal" ||
+             std::string_view{argv[optind]} == "c") {
     std::cout << "got " << argv[optind] << std::endl;
     // TODO: handle cal arg
     cal(config, std::nullopt);
