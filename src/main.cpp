@@ -2,7 +2,6 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
-#include <err.h>
 #include <exception>
 #include <fstream>
 #include <getopt.h>
@@ -184,7 +183,8 @@ public:
     }
 
     if (s.length() >= 3) {
-      // idk transform didn't work
+      // std::transform(s.begin(), s.end(), s.begin(),
+      //                [](char c) { return tolower(c); });
       std::for_each(s.begin(), s.end(), [](char &c) { c = tolower(c); });
       s[0] = std::toupper(s[0]);
       int i = 1;
@@ -430,7 +430,7 @@ int main(int argc, char **argv) {
   }
 
   if (optind + 1 < argc) {
-    std::cerr << "Error: multiple commands provided" << std::endl;
+    std::cerr << "Error: multiple commands provided\n";
     usage(std::cerr);
     return 1;
   }
@@ -484,8 +484,7 @@ int main(int argc, char **argv) {
     // TODO: handle cal arg
     cal(config, std::nullopt);
   } else {
-    warnx("invalid command: -- '%s'", argv[optind]);
-    // std::cerr << "Error: Unknown command " << argv[optind] << std::endl;
+    std::cerr << "Error: invalid command -- '" << argv[optind] << "'\n";
     usage(std::cerr);
     return 1;
   }
