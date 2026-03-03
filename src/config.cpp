@@ -14,28 +14,29 @@ static inline auto xdg_data_home() -> std::string {
 }
 
 Config::Config()
-    : config_path(xdg_config_home() + "/quand/config"),
-      calendar_path(xdg_data_home() + "/quand/calendar"),
-      editor(getenv_or("EDITOR", "vi")), header(true), mondayfirst(false),
+    : calendar_path(xdg_data_home() + "/quand/calendar"),
+      editor(getenv_or("EDITOR", "vi")), print_header(true), mondayfirst(false),
       past(-1), future(14), date(std::nullopt), yesterday("yesterday"),
-      today("\x1b[1mtoday"), tomorrow("tomorrow") {
-  parse_config(); // TODO this shouldn't be here
-}
+      today("\x1b[1mtoday"), tomorrow("tomorrow") {}
 
-auto Config::parse_config() -> void {
+// set default values with delegated constructor
+// set values from config file
+// set values from CLI argument
+// this could be optimized but it was easy to do it this way
+Config::Config(const Args &args) : Config() {
   // clang-format off
-  auto lines = readlines(config_path)
+  auto lines = readlines(args.config_path.value_or(xdg_config_home() + "/quand/config"))
     | std::views::transform(trim)
     | std::views::filter([](const auto& s) { return !s.empty() && s[0] != '#'; });
-    // | std::ranges:;to<std::vector>();
   // clang-format on
 
   std::size_t n = 1;
   for (auto line : lines) {
     auto pos = line.find("=");
     if (pos == std::string::npos) {
-      throw std::invalid_argument{"config file line " + std::to_string(n)};
+      throw std::invalid_argument{"Config file line " + std::to_string(n)};
     }
+
     auto key = line.substr(0, pos);
     trim(key); // that's ugly
     auto value = line.substr(pos + 1);
@@ -47,12 +48,12 @@ auto Config::parse_config() -> void {
       editor = value;
     } else if (key == "header") {
       // overkill? noooo
-      // std::istringstream{value} >> std::boolalpha >> header;
-      std::istringstream{value} >> header;
+      // std::istringstream{value} >> std::boolalpha >> print_header;
+      std::istringstream{value} >> print_header;
     } else if (key == "past") {
       past = -std::abs(std::stoi(value));
     } else if (key == "future") {
-      past = std::stoi(value);
+      future = std::stoi(value);
     } else if (key == "mondayfirst") {
       // std::istringstream{value} >> std::boolalpha >> mondayfirst;
       std::istringstream{value} >> mondayfirst;
@@ -68,5 +69,16 @@ auto Config::parse_config() -> void {
     }
 
     n++;
+  }
+
+  date = args.date;
+  if (args.calendar_path) {
+    calendar_path = *args.calendar_path;
+  }
+  if (args.past) {
+    past = *args.past;
+  }
+  if (args.future) {
+    future = *args.future;
   }
 }

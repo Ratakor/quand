@@ -88,27 +88,26 @@ static auto print(const std::vector<Line> &lines, const Date &date,
 }
 
 int main(int argc, char **argv) {
-  auto config = Config{};
-
+  auto args = Args{};
   int opt;
   while ((opt = getopt_long(argc, argv, "c:C:d:p:f:hv", long_options,
                             nullptr)) != -1) {
     switch (opt) {
     case 'c':
-      config.calendar_path = optarg;
+      args.calendar_path = optarg;
       break;
     case 'C':
-      config.config_path = optarg;
+      args.config_path = optarg;
       break;
     case 'd':
-      // TODO
-      std::cerr << "Unsupported flag detected" << std::endl;
+      // TODO: args.date
+      std::cerr << "Warning: unsupported flag -- 'd'" << std::endl;
       break;
     case 'p':
-      config.past = -std::abs(std::stoi(optarg));
+      args.past = -std::abs(std::stoi(optarg));
       break;
     case 'f':
-      config.future = std::stoi(optarg);
+      args.future = std::stoi(optarg);
       break;
     case 'h':
       usage(std::cout);
@@ -122,8 +121,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  // TODO: parse config here, need to keep track of what was overwritten by CLI
-  // args, probably a good idea to seperate Config from Context
+  auto config = Config{args};
 
   if (optind == argc) {
     // clang-format off
@@ -137,7 +135,7 @@ int main(int argc, char **argv) {
 
     auto now = system_clock::to_time_t(system_clock::now());
 
-    if (config.header) {
+    if (config.print_header) {
       std::cout << std::ctime(&now) << '\n';
     }
 
