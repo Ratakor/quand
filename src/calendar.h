@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 
 class DateValue {
@@ -13,7 +14,8 @@ public:
   auto operator==(const DateValue &other) const -> bool;
 
 protected:
-  static auto parse_repeat(std::string &s, bool &repeat) -> void;
+  template <std::size_t N>
+  DateValue(std::string s, const std::array<std::string, N> &long_names);
 };
 
 class Year : public DateValue {
@@ -26,7 +28,7 @@ public:
 
 class Month : public DateValue {
 private:
-  constexpr static std::string_view long_names[] = {
+  constexpr static auto long_names = std::array<std::string, 12>{
       "January", "February", "March",     "April",   "May",      "June",
       "July",    "August",   "September", "October", "November", "December",
   };
@@ -42,7 +44,7 @@ public:
 class Day : public DateValue {
 private:
   // start with sunday?
-  constexpr static std::string_view long_names[] = {
+  constexpr static auto long_names = std::array<std::string, 7>{
       "Monday", "Tuesday",  "Wednesday", "Thursday",
       "Friday", "Saturday", "Sunday",
   };
