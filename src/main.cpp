@@ -1,27 +1,22 @@
-#include <algorithm>
 #include <chrono>
-#include <cstdlib>
-#include <cstring>
-#include <exception>
-#include <fstream>
 #include <getopt.h>
-#include <iomanip>
 #include <iostream>
 #include <optional>
 #include <regex>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <unistd.h>
 #include <vector>
 
+#include "calendar.h"
+#include "config.h"
 #include "utils.h"
 
 using std::chrono::system_clock;
 
 #define SEC_PER_DAY 86400
 
-constexpr static const struct option long_options[] = {
+constexpr static struct option long_options[] = {
     {"calendar", required_argument, 0, 'c'},
     {"config", required_argument, 0, 'C'},
     {"date", required_argument, 0, 'd'},
@@ -32,273 +27,7 @@ constexpr static const struct option long_options[] = {
     {0, 0, 0, 0},
 };
 
-class DateValue {
-public:
-  int value;
-  bool repeat;
-
-  DateValue() = default;
-  DateValue(int value, bool repeat = false) : value(value), repeat(repeat) {}
-
-  std::string toString(int width = 2) const {
-    if (value < 0) {
-      return repeat ? "*" : "";
-    } else {
-      std::ostringstream oss;
-      oss << std::setw(width) << std::setfill('0') << value;
-      return oss.str() + (repeat ? "*" : "");
-    }
-  }
-
-  bool operator==(const DateValue other) const {
-    return value == other.value || repeat || other.repeat;
-  }
-};
-
-class Year : public DateValue {
-public:
-  using DateValue::DateValue;
-
-  Year(std::string s) {
-    if (s.back() == '*') {
-      s.pop_back();
-      repeat = true;
-    } else {
-      repeat = false;
-    }
-
-    if (s.empty()) {
-      value = -1;
-    } else {
-      value = stoi(s);
-    }
-  }
-
-  std::string toString() const { return DateValue::toString(4); }
-};
-
-class Month : public DateValue {
-private:
-  constexpr static std::string_view long_names[] = {
-      "January", "February", "March",     "April",   "May",      "June",
-      "July",    "August",   "September", "October", "November", "December",
-  };
-
-public:
-  using DateValue::DateValue;
-
-  Month(std::string s) {
-    if (s.back() == '*') {
-      s.pop_back();
-      repeat = true;
-    } else {
-      repeat = false;
-    }
-
-    if (s.empty()) {
-      value = -1;
-      return;
-    }
-
-    if (s.length() >= 3) {
-      // std::transform(s.begin(), s.end(), s.begin(),
-      //                [](char c) { return tolower(c); });
-      std::for_each(s.begin(), s.end(), [](char &c) { c = tolower(c); });
-      s[0] = std::toupper(s[0]);
-      int i = 1;
-      for (auto name : long_names) {
-        if (name.starts_with(s)) {
-          value = i;
-          return;
-        }
-        i++;
-      }
-    }
-
-    value = std::stoi(s);
-    if (value < 1 || value > 12) {
-      throw std::exception{}; // TODO
-    }
-  }
-
-  // hopefully value is positive
-  std::string long_name() const { return std::string{long_names[value - 1]}; }
-  std::string short_name() const { return long_name().substr(0, 3); }
-};
-
-class Day : public DateValue {
-private:
-  // start with sunday?
-  constexpr static std::string_view long_names[] = {
-      "Monday", "Tuesday",  "Wednesday", "Thursday",
-      "Friday", "Saturday", "Sunday",
-  };
-
-public:
-  using DateValue::DateValue;
-
-  Day(std::string s) {
-    if (s.back() == '*') {
-      s.pop_back();
-      repeat = true;
-    } else {
-      repeat = false;
-    }
-
-    if (s.empty()) {
-      value = -1;
-      return;
-    }
-
-    if (s.length() >= 3) {
-      // idk transform didn't work
-      std::for_each(s.begin(), s.end(), [](char &c) { c = tolower(c); });
-      s[0] = std::toupper(s[0]);
-      int i = 1;
-      for (auto name : long_names) {
-        if (name.starts_with(s)) {
-          value = i;
-          return;
-        }
-        i++;
-      }
-    }
-
-    value = std::stoi(s);
-    // TODO: better check based on month?
-    if (value < 1 || value > 31) {
-      throw std::exception{}; // TODO
-    }
-  }
-
-  // hopefully value is positive
-  std::string long_name() const { return std::string{long_names[value - 1]}; }
-  std::string short_name() const { return long_name().substr(0, 3); }
-};
-
-class Date {
-public:
-  Year year;
-  Month month;
-  Day day;
-
-  Date() = default;
-  Date(Year year, Month month, Day day) : year(year), month(month), day(day) {}
-  Date(time_t t) {
-    auto tm = *localtime(&t);
-    year = {tm.tm_year + 1900};
-    month = {tm.tm_mon + 1};
-    day = {tm.tm_mday};
-  }
-  Date(std::string s) {
-    auto pos = s.find_first_not_of("0123456789*");
-    if (pos == std::string::npos) {
-      throw std::exception{}; // idk
-    }
-    year = {s.substr(0, pos)};
-    s.erase(0, pos);
-    ltrim(s);
-
-    pos = s.find_first_not_of(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
-    if (pos == std::string::npos) {
-      throw std::exception{}; // idk
-    }
-    month = {s.substr(0, pos)};
-    s.erase(0, pos);
-    ltrim(s);
-
-    day = {s};
-    // pos = s.find_first_not_of(
-    //     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
-    // if (pos == std::string::npos) {
-    //   throw std::exception{}; // idk
-    // }
-    // day = Day{s.substr(0, pos)};
-    // s.erase(0, pos);
-  }
-
-  std::string toString() const {
-    return year.toString() + " " + month.toString() + " " + day.toString();
-  }
-
-  bool operator==(const Date &other) const {
-    return year == other.year && month == other.month && day == other.day;
-  }
-};
-
-class Line {
-public:
-  Date date;
-  std::string text;
-
-  Line(std::string s) {
-    size_t pos = s.find_first_not_of("0123456789*");
-    if (pos == std::string::npos) {
-      throw std::exception{}; // idk
-    }
-    date.year = {s.substr(0, pos)};
-    s.erase(0, pos);
-    ltrim(s);
-
-    pos = s.find_first_not_of(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
-    if (pos == std::string::npos) {
-      throw std::exception{}; // idk
-    }
-    date.month = {s.substr(0, pos)};
-    s.erase(0, pos);
-    ltrim(s);
-
-    pos = s.find_first_not_of(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*");
-    if (pos == std::string::npos) {
-      throw std::exception{}; // idk
-    }
-    date.day = {s.substr(0, pos)};
-    s.erase(0, pos);
-
-    text = trim(s); // rtrim should already be done but you never know
-  }
-};
-
-class Config {
-public:
-  // TODO: lang
-  std::string config_path;
-  std::string calendar_path;
-  std::string editor;
-  bool header; // TODO: rename print_header
-  bool mondayfirst;
-  int past;
-  int future;
-  std::optional<Date> date; // not in config file
-  std::string yesterday;
-  std::string today;
-  std::string tomorrow;
-  std::string special;
-
-  Config() {
-    config_path =
-        getenv_or("XDG_CONFIG_HOME", std::string{getenv("HOME")} + "/.config") +
-        "/quand/calendar";
-    calendar_path = getenv_or("XDG_DATA_HOME",
-                              std::string{getenv("HOME")} + "/.local/share") +
-                    "/quand/calendar";
-    editor = getenv_or("EDITOR", "vi");
-    header = true;
-    mondayfirst = false;
-    past = -1;
-    future = 14;
-    date = {};
-    yesterday = "yesterday";
-    today = "today";
-    tomorrow = "tomorrow";
-    special = "special";
-  }
-};
-
-static void usage(std::ostream &stream) {
+static auto usage(std::ostream &stream) -> void {
   stream
       << "Usage: quand [command] [options]\n\n"
       << "Command:\n"
@@ -320,39 +49,30 @@ static void usage(std::ostream &stream) {
       << std::endl;
 }
 
-static void edit(const Config &config) {
+static auto edit(const Config &config) -> void {
   // auto command = config.editor + " " + config.calendar_path;
   // std::system(command.c_str());
   execlp(config.editor.c_str(), config.editor.c_str(),
          config.calendar_path.c_str(), NULL);
-  exit(1);
+  std::exit(1);
 }
 
-static void cal(const Config &config, std::optional<std::string> arg) {
+static auto cal(const Config &config, std::optional<std::string> arg) -> void {
   if (config.mondayfirst) {
     execlp("cal", "cal", "-m", "-n", arg.value_or("1").c_str());
   } else {
     execlp("cal", "cal", "-s", "-n", arg.value_or("1").c_str());
   }
-  exit(1);
+  std::exit(1);
 }
 
-static std::vector<std::string> readlines(const std::string &filename) {
-  auto file = std::ifstream{filename};
-  auto lines = std::vector<std::string>{};
-  for (auto line = std::string{}; std::getline(file, line);) {
-    lines.push_back(line);
-  }
-  return lines;
-}
-
-void print(const std::vector<Line> &lines, const Date &date,
-           std::optional<std::string> prefix) {
+static auto print(const std::vector<Line> &lines, const Date &date,
+                  std::optional<std::string> prefix) -> void {
   // std::cout << prefix.value_or("") << date.toString() << std::endl;
   for (auto l : lines) {
     if (l.date == date) {
       // print day short name?
-      std::cout << prefix.value_or(date.toString()) << ": ";
+      std::cout << prefix.value_or(date.to_string()) << ": ";
 
       auto age_re = std::regex{"([^\\\\]|^)\\\\age"};
       auto age = "\\1" + std::to_string(date.year.value - l.date.year.value);
@@ -417,7 +137,7 @@ int main(int argc, char **argv) {
     auto now = system_clock::to_time_t(system_clock::now());
 
     if (config.header) {
-      // TODO: print header
+      std::cout << std::ctime(&now) << '\n';
     }
 
     for (; config.past < -1; config.past++) {

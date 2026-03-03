@@ -1,9 +1,12 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-std::string getenv_or(const char *key, const std::string &value_or);
+auto getenv_or(const char *key, const std::string &value_or) -> std::string;
 
-std::string ltrim(std::string &s);
-std::string rtrim(std::string &s);
-std::string trim(std::string &s);
+auto ltrim(std::string &s) -> std::string;
+auto rtrim(std::string &s) -> std::string;
+auto trim(std::string &s) -> std::string;
+
+auto readlines(const std::string &filename) -> std::vector<std::string>;

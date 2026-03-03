@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED On)
 # set(CMAKE_CXX_EXTENSIONS Off)
 
 add_executable(${PROJECT_NAME}
+               src/calendar.cpp
+               src/config.cpp
                src/main.cpp
                src/utils.cpp
               )
