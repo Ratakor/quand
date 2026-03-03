@@ -122,7 +122,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  // TODO: handle config_path & config overall
+  // TODO: parse config here, need to keep track of what was overwritten by CLI
+  // args, probably a good idea to seperate Config from Context
 
   if (optind == argc) {
     // clang-format off

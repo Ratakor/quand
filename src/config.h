@@ -20,4 +20,5 @@ public:
   std::string tomorrow;
 
   Config();
+  auto parse_config() -> void;
 };
