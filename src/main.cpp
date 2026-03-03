@@ -72,11 +72,19 @@ static auto print(const std::vector<Line> &lines, const Date &date,
   for (auto l : lines) {
     if (l.date == date) {
       // print day short name?
-      std::cout << prefix.value_or(date.to_string()) << ": ";
+      if (prefix) {
+        auto csi_re = std::regex{R"(([^\\]|^)\\(x1b|033))"};
+        std::regex_replace(std::ostreambuf_iterator<char>{std::cout},
+                           prefix->begin(), prefix->end(), csi_re, "\\1\x1b",
+                           std::regex_constants::format_sed);
+        std::cout << "\x1b[m: ";
+      } else {
+        std::cout << date.to_string() << ": ";
+      }
 
-      auto age_re = std::regex{"([^\\\\]|^)\\\\age"};
+      auto age_re = std::regex{R"(([^\\]|^)\\age)"};
       auto age = "\\1" + std::to_string(date.year.value - l.date.year.value);
-      std::regex_replace(std::ostreambuf_iterator<char>(std::cout),
+      std::regex_replace(std::ostreambuf_iterator<char>{std::cout},
                          l.text.begin(), l.text.end(), age_re, age,
                          std::regex_constants::format_sed);
       // std::regex_replace(l.text, age_re, age,
